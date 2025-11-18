@@ -9,7 +9,7 @@ struct string_chunks {
     usize capacity;
 };
 
-void split_str(struct arena *a, struct string_chunks *da, const char *input, const char *delim);
+struct string_chunks *split_str(struct arena *a, const char *input, const char *delim);
 i64 parse_int(const char *source, int base);
 
 #ifdef UTILS_IMPLEMENTATION
@@ -21,11 +21,20 @@ i64 parse_int(const char *source, int base);
 #define ARENA_IMPLEMENTATION
 #include "arena.h"
 
-void split_str(struct arena *a, struct string_chunks *da, const char *input, const char *delim)
+#define STRING_CHUNKS_CAPACITY 256
+
+struct string_chunks *split_str(struct arena *a, const char *input, const char *delim)
 {
+    struct string_chunks *chunks = arena_alloc(a, sizeof(*chunks));
+    arena_da_init(a, chunks);
+
     const char *current_pos = input;
     const char *next_delim = NULL;
     size_t delim_len = strlen(delim);
+
+    if (delim_len == 0) {
+        return chunks;
+    }
 
     while ((next_delim = strstr(current_pos, delim)) != NULL) {
         size_t len = next_delim - current_pos;
@@ -33,7 +42,7 @@ void split_str(struct arena *a, struct string_chunks *da, const char *input, con
         char *token = arena_alloc(a, len + 1);
         memcpy(token, current_pos, len);
         token[len] = '\0';
-        arena_da_append(a, da, token);
+        arena_da_append(a, chunks, token);
 
         current_pos = next_delim + delim_len;
     }
@@ -44,8 +53,10 @@ void split_str(struct arena *a, struct string_chunks *da, const char *input, con
         char *token = arena_alloc(a, last_len + 1);
         memcpy(token, current_pos, last_len);
         token[last_len] = '\0';
-        arena_da_append(a, da, token);
+        arena_da_append(a, chunks, token);
     }
+
+    return chunks;
 }
 
 i64 parse_int(const char *source, int base)

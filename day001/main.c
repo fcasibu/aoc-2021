@@ -56,11 +56,9 @@ int main(void)
 
     char *source = get_input(&a, "day001/input.txt");
 
-    struct string_chunks chunks = { 0 };
-    arena_da_init(&a, &chunks);
-    split_str(&a, &chunks, source, "\n");
+    struct string_chunks *chunks = split_str(&a, source, "\n");
 
-    struct context ctx = { .chunks = &chunks, .a = &a };
+    struct context ctx = { .chunks = chunks, .a = &a };
 
     solve_part1(&ctx);
     solve_part2(&ctx);
