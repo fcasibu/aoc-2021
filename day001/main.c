@@ -1,20 +1,43 @@
 #include <stdio.h>
 
 #define ARENA_IMPLEMENTATION
-#include "../include/arena.h"
+#include "arena.h"
 #define FILE_IMPLEMENTATION
-#include "../include/file.h"
+#include "file.h"
 #define UTILS_IMPLEMENTATION
-#include "../include/utils.h"
+#include "utils.h"
 
 #define ARENA_SIZE 1024
 
-struct context {
-    struct arena *a;
-    struct string_chunks *chunks;
-};
+typedef struct {
+    arena_t *arena;
+    string_chunks_t *chunks;
+} context_t;
 
-void solve_part2(struct context *ctx)
+void solve_part1(const context_t *ctx);
+void solve_part2(const context_t *ctx);
+
+int main(void)
+{
+    arena_t arena = { 0 };
+    if (!arena_create(&arena, ARENA_SIZE)) {
+        fprintf(stderr, "Failed to create arena\n");
+        return 1;
+    }
+
+    char *source = get_input(&arena, "day001/input.txt");
+
+    context_t ctx = { .chunks = split_str(&arena, source, "\n"), .arena = &arena };
+
+    solve_part1(&ctx);
+    solve_part2(&ctx);
+
+    arena_destroy(&arena);
+
+    return 0;
+}
+
+void solve_part2(const context_t *ctx)
 {
     usize measurements = 0;
     usize window_size = 3;
@@ -30,7 +53,7 @@ void solve_part2(struct context *ctx)
     printf("P2/Measurements: %zu\n", measurements);
 }
 
-void solve_part1(struct context *ctx)
+void solve_part1(const context_t *ctx)
 {
     usize measurements = 0;
     i64 prev_measurement = -1;
@@ -44,26 +67,4 @@ void solve_part1(struct context *ctx)
     }
 
     printf("P1/Measurements: %zu\n", measurements);
-}
-
-int main(void)
-{
-    struct arena a = { 0 };
-    if (!arena_create(&a, ARENA_SIZE)) {
-        fprintf(stderr, "Failed to create arena\n");
-        return 1;
-    }
-
-    char *source = get_input(&a, "day001/input.txt");
-
-    struct string_chunks *chunks = split_str(&a, source, "\n");
-
-    struct context ctx = { .chunks = chunks, .a = &a };
-
-    solve_part1(&ctx);
-    solve_part2(&ctx);
-
-    arena_destroy(&a);
-
-    return 0;
 }

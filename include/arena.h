@@ -1,20 +1,20 @@
 #pragma once
 
-#include "typedefs.h"
+#include "type_defs.h"
 #include <stdbool.h>
 
-struct arena {
+typedef struct arena {
     unsigned char *base;
     usize capacity;
     usize offset;
     struct arena *next;
-};
+} arena_t;
 
-bool arena_create(struct arena *a, usize capacity);
-void *arena_alloc(struct arena *a, usize size);
-void *arena_realloc(struct arena *a, void *ptr, usize old_size, usize size);
-void arena_clean(struct arena *a);
-void arena_destroy(struct arena *a);
+bool arena_create(arena_t *arena, usize capacity);
+void *arena_alloc(arena_t *arena, usize size);
+void *arena_realloc(arena_t *arena, void *ptr, usize old_size, usize size);
+void arena_clean(arena_t *arena);
+void arena_destroy(arena_t *arena);
 
 #ifdef ARENA_IMPLEMENTATION
 
@@ -25,58 +25,59 @@ void arena_destroy(struct arena *a);
 
 #define ARENA_DA_CAPACITY 256
 
-#define arena_da_init(a, da)                                                 \
-    do {                                                                     \
-        (da)->capacity = ARENA_DA_CAPACITY;                                  \
-        (da)->size = 0;                                                      \
-        (da)->items = arena_alloc(a, (da)->capacity * sizeof(*(da)->items)); \
-        if (!(da)->items) {                                                  \
-            fprintf(stderr, "Out of memory\n");                              \
-            exit(EXIT_FAILURE);                                              \
-        }                                                                    \
+#define arena_da_init(a, da)                                                   \
+    do {                                                                       \
+        (da)->capacity = ARENA_DA_CAPACITY;                                    \
+        (da)->size = 0;                                                        \
+        (da)->items = arena_alloc((a), (da)->capacity * sizeof(*(da)->items)); \
+        if (!(da)->items) {                                                    \
+            fprintf(stderr, "Out of memory\n");                                \
+            exit(EXIT_FAILURE);                                                \
+        }                                                                      \
     } while (0)
 
-#define arena_da_append(a, da, item)                                                       \
-    do {                                                                                   \
-        if ((da)->size >= (da)->capacity) {                                                \
-            (da)->capacity = (da)->capacity == 0 ? ARENA_DA_CAPACITY : (da)->capacity * 2; \
-            void *tmp = arena_realloc(a, (da)->items, (da)->size * sizeof(*(da)->items),   \
-                                      (da)->capacity * sizeof(*(da)->items));              \
-            if (!tmp) {                                                                    \
-                fprintf(stderr, "Out of memory\n");                                        \
-                exit(EXIT_FAILURE);                                                        \
-            }                                                                              \
-            (da)->items = tmp;                                                             \
-        }                                                                                  \
-        (da)->items[(da)->size++] = item;                                                  \
+#define arena_da_append(a, da, item)                                                          \
+    do {                                                                                      \
+        if ((da)->size >= (da)->capacity) {                                                   \
+            (da)->capacity = (da)->capacity == 0 ? ARENA_DA_CAPACITY : (da)->capacity * 2;    \
+            typeof(*(da)->items) *tmp = arena_realloc((a), (da)->items,                       \
+                                                      (da)->size * sizeof(*(da)->items),      \
+                                                      (da)->capacity * sizeof(*(da)->items)); \
+            if (!tmp) {                                                                       \
+                fprintf(stderr, "Out of memory\n");                                           \
+                exit(EXIT_FAILURE);                                                           \
+            }                                                                                 \
+            (da)->items = tmp;                                                                \
+        }                                                                                     \
+        (da)->items[(da)->size++] = (item);                                                   \
     } while (0)
 
-bool arena_create(struct arena *a, usize capacity)
+bool arena_create(arena_t *arena, usize capacity)
 {
-    if (!a || capacity == 0)
+    if (!arena || capacity == 0)
         return false;
 
-    a->base = malloc(capacity);
-    if (!a->base)
+    arena->base = malloc(capacity);
+    if (!arena->base)
         return false;
 
-    a->capacity = capacity;
-    a->offset = 0;
-    a->next = NULL;
+    arena->capacity = capacity;
+    arena->offset = 0;
+    arena->next = NULL;
     return true;
 }
 
-void *arena_alloc(struct arena *a, usize size)
+void *arena_alloc(arena_t *arena, usize size)
 {
-    if (!a || !a->base || size == 0)
+    if (!arena || !arena->base || size == 0)
         return NULL;
 
-    struct arena *end = a;
+    arena_t *end = arena;
     while (end->next)
         end = end->next;
 
     if (end->offset + size > end->capacity) {
-        struct arena *next = malloc(sizeof(*next));
+        arena_t *next = malloc(sizeof(*next));
         if (!next)
             return NULL;
 
@@ -96,14 +97,14 @@ void *arena_alloc(struct arena *a, usize size)
     return ptr;
 }
 
-void *arena_realloc(struct arena *a, void *oldptr, usize old_size, usize new_size)
+void *arena_realloc(arena_t *arena, void *oldptr, usize old_size, usize new_size)
 {
     assert(old_size != 0);
 
     if (new_size <= old_size)
         return oldptr;
 
-    void *newptr = arena_alloc(a, new_size);
+    void *newptr = arena_alloc(arena, new_size);
     if (!newptr)
         return NULL;
 
@@ -111,28 +112,28 @@ void *arena_realloc(struct arena *a, void *oldptr, usize old_size, usize new_siz
     return newptr;
 }
 
-void arena_clean(struct arena *a)
+void arena_clean(arena_t *arena)
 {
-    while (a) {
-        a->offset = 0;
-        a = a->next;
+    while (arena) {
+        arena->offset = 0;
+        arena = arena->next;
     }
 }
 
-void arena_destroy(struct arena *a)
+void arena_destroy(arena_t *arena)
 {
-    if (!a)
+    if (!arena)
         return;
 
-    free(a->base);
-    a->base = NULL;
-    a->capacity = 0;
-    a->offset = 0;
+    free(arena->base);
+    arena->base = NULL;
+    arena->capacity = 0;
+    arena->offset = 0;
 
-    if (a->next) {
-        arena_destroy(a->next);
-        free(a->next);
-        a->next = NULL;
+    if (arena->next) {
+        arena_destroy(arena->next);
+        free(arena->next);
+        arena->next = NULL;
     }
 }
 

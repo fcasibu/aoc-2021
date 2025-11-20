@@ -1,47 +1,78 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "../include/typedefs.h"
 #define ARENA_IMPLEMENTATION
-#include "../include/arena.h"
+#include "arena.h"
 #define FILE_IMPLEMENTATION
-#include "../include/file.h"
+#include "file.h"
 #define UTILS_IMPLEMENTATION
-#include "../include/utils.h"
+#include "utils.h"
 
 #define ARENA_SIZE 1024
 
-enum direction {
+typedef enum {
     DIR_FORWARD,
     DIR_UP,
     DIR_DOWN,
     DIR_UNKNOWN,
-};
+} direction_t;
 
-struct instruction {
-    enum direction direction;
+typedef struct {
+    direction_t direction;
     i32 position;
-};
+} instruction_t;
 
-struct da_instruction {
-    struct instruction *items;
+typedef struct {
+    instruction_t *items;
     usize size;
     usize capacity;
-};
+} da_instruction_t;
 
-struct context {
-    struct arena *a;
+typedef struct {
+    arena_t *arena;
     const char *source;
-    struct da_instruction *da;
-};
+    da_instruction_t *instructions;
+} context_t;
 
-void solve_part1(struct context *ctx)
+void solve_part1(const context_t *ctx);
+void solve_part2(const context_t *ctx);
+da_instruction_t *parse_input(arena_t *arena, const char *source);
+
+int main(void)
+{
+    arena_t arena = { 0 };
+    if (!arena_create(&arena, ARENA_SIZE)) {
+        fprintf(stderr, "Failed to create arena\n");
+        return 1;
+    }
+
+    char *source = get_input(&arena, "day002/input.txt");
+
+    if (!source) {
+        fprintf(stderr, "Failed to read input file\n");
+        arena_destroy(&arena);
+        return 1;
+    }
+
+    context_t ctx = { .instructions = parse_input(&arena, source),
+                      .arena = &arena,
+                      .source = source };
+
+    solve_part1(&ctx);
+    solve_part2(&ctx);
+
+    arena_destroy(&arena);
+
+    return 0;
+}
+
+void solve_part1(const context_t *ctx)
 {
     i32 current_depth = 0;
     i32 current_horz_pos = 0;
 
-    for (usize i = 0; i < ctx->da->size; ++i) {
-        struct instruction instr = ctx->da->items[i];
+    for (usize i = 0; i < ctx->instructions->size; ++i) {
+        instruction_t instr = ctx->instructions->items[i];
 
         switch (instr.direction) {
         case DIR_FORWARD:
@@ -62,14 +93,14 @@ void solve_part1(struct context *ctx)
     printf("P1/Result: %d\n", current_horz_pos * current_depth);
 }
 
-void solve_part2(struct context *ctx)
+void solve_part2(const context_t *ctx)
 {
     i32 current_depth = 0;
     i32 current_horz_pos = 0;
     i32 aim = 0;
 
-    for (usize i = 0; i < ctx->da->size; ++i) {
-        struct instruction instr = ctx->da->items[i];
+    for (usize i = 0; i < ctx->instructions->size; ++i) {
+        instruction_t instr = ctx->instructions->items[i];
 
         switch (instr.direction) {
         case DIR_FORWARD:
@@ -91,18 +122,18 @@ void solve_part2(struct context *ctx)
     printf("P2/Result: %d\n", current_horz_pos * current_depth);
 }
 
-void parse_input(struct context *ctx)
+da_instruction_t *parse_input(arena_t *arena, const char *source)
 {
-    struct string_chunks *chunks = split_str(ctx->a, ctx->source, "\n");
-    struct da_instruction *da = arena_alloc(ctx->a, sizeof(*da));
-    arena_da_init(ctx->a, da);
+    string_chunks_t *chunks = split_str(arena, source, "\n");
+    da_instruction_t *da = arena_alloc(arena, sizeof(*da));
+    arena_da_init(arena, da);
 
     for (usize i = 0; i < chunks->size; ++i) {
         const char *chunk = chunks->items[i];
-        struct string_chunks *space_chunks = split_str(ctx->a, chunk, " ");
+        string_chunks_t *space_chunks = split_str(arena, chunk, " ");
         assert(space_chunks->size == 2);
 
-        enum direction dir = DIR_UNKNOWN;
+        direction_t dir = DIR_UNKNOWN;
 
         if (strcmp(space_chunks->items[0], "forward") == 0) {
             dir = DIR_FORWARD;
@@ -112,48 +143,12 @@ void parse_input(struct context *ctx)
             dir = DIR_DOWN;
         }
 
-        struct instruction instr =
-            (struct instruction){ .direction = dir,
-                                  .position = (i32)parse_int(space_chunks->items[1], 10) };
+        instruction_t instr =
+            (instruction_t){ .direction = dir,
+                             .position = (i32)parse_int(space_chunks->items[1], 10) };
 
-        arena_da_append(ctx->a, da, instr);
+        arena_da_append(arena, da, instr);
     }
 
-    ctx->da = da;
-}
-
-struct context init_ctx(struct arena *a, const char *source)
-{
-    struct context ctx = { 0 };
-    ctx.a = a;
-    ctx.source = source;
-
-    return ctx;
-}
-
-int main(void)
-{
-    struct arena a = { 0 };
-    if (!arena_create(&a, ARENA_SIZE)) {
-        fprintf(stderr, "Failed to create arena\n");
-        return 1;
-    }
-
-    char *source = get_input(&a, "day002/input.txt");
-
-    if (!source) {
-        fprintf(stderr, "Failed to read input file\n");
-        arena_destroy(&a);
-        return 1;
-    }
-
-    struct context ctx = init_ctx(&a, source);
-    parse_input(&ctx);
-
-    solve_part1(&ctx);
-    solve_part2(&ctx);
-
-    arena_destroy(ctx.a);
-
-    return 0;
+    return da;
 }

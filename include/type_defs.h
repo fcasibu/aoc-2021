@@ -1,5 +1,3 @@
-#ifndef TYPEDEFS_H
-#define TYPEDEFS_H
 #pragma once
 
 #include <stdint.h>
@@ -17,5 +15,5 @@ typedef float f32;
 typedef double f64;
 typedef uintptr_t uptr;
 typedef size_t usize;
-
-#endif // TYPEDEFS_H
+typedef ptrdiff_t isize;
+typedef int err;
