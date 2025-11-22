@@ -7,6 +7,7 @@ char *get_input(arena_t *a, const char *filename);
 #ifdef FILE_IMPLEMENTATION
 
 #include <assert.h>
+#include <stdio.h>
 
 char *get_input(arena_t *a, const char *filename)
 {
@@ -38,8 +39,6 @@ char *get_input(arena_t *a, const char *filename)
     char *input = arena_alloc(a, (usize)size + 1);
     usize bytes_read = fread(input, sizeof(char), (unsigned long)size, file_ptr);
     input[bytes_read] = '\0';
-
-    assert(bytes_read == (usize)size);
 
     if (ferror(file_ptr) != 0) {
         perror("fread failed");

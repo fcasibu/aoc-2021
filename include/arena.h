@@ -32,7 +32,7 @@ void arena_destroy(arena_t *arena);
         (da)->items = arena_alloc((a), (da)->capacity * sizeof(*(da)->items)); \
         if (!(da)->items) {                                                    \
             fprintf(stderr, "Out of memory\n");                                \
-            exit(EXIT_FAILURE);                                                \
+            abort();                                                           \
         }                                                                      \
     } while (0)
 
@@ -45,7 +45,7 @@ void arena_destroy(arena_t *arena);
                                                       (da)->capacity * sizeof(*(da)->items)); \
             if (!tmp) {                                                                       \
                 fprintf(stderr, "Out of memory\n");                                           \
-                exit(EXIT_FAILURE);                                                           \
+                abort();                                                                      \
             }                                                                                 \
             (da)->items = tmp;                                                                \
         }                                                                                     \

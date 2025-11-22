@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 INCLUDE_LIBS = -I./include
 CFLAGS = -std=c2x -Wall -Wextra -Werror -Wpedantic -g -O2
 

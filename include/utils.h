@@ -27,6 +27,9 @@ i64 parse_int(const char *source, int base);
 string_chunks_t *split_str(arena_t *arena, const char *input, const char *delim)
 {
     string_chunks_t *chunks = arena_alloc(arena, sizeof(*chunks));
+    if (!chunks)
+        return NULL;
+
     arena_da_init(arena, chunks);
 
     const char *current_pos = input;
@@ -43,6 +46,9 @@ string_chunks_t *split_str(arena_t *arena, const char *input, const char *delim)
         isize len = next_delim - current_pos;
 
         char *token = arena_alloc(arena, (usize)(len + 1));
+        if (!token)
+            return NULL;
+
         memcpy(token, current_pos, len);
         token[len] = '\0';
         arena_da_append(arena, chunks, token);
@@ -54,6 +60,9 @@ string_chunks_t *split_str(arena_t *arena, const char *input, const char *delim)
 
     if (last_len > 0) {
         char *token = arena_alloc(arena, last_len + 1);
+        if (!token)
+            return NULL;
+
         memcpy(token, current_pos, last_len);
         token[last_len] = '\0';
         arena_da_append(arena, chunks, token);
