@@ -126,7 +126,7 @@ da_instruction_t *parse_input(arena_t *arena, const char *source)
 {
     string_chunks_t *chunks = split_str(arena, source, "\n");
     da_instruction_t *da = arena_alloc(arena, sizeof(*da));
-    arena_da_init(arena, da);
+    arena_da_init(arena, da, ARENA_DA_CAPACITY);
 
     for (usize i = 0; i < chunks->size; ++i) {
         const char *chunk = chunks->items[i];

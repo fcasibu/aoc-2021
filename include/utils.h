@@ -24,13 +24,16 @@ i64 parse_int(const char *source, int base);
 
 #define STRING_CHUNKS_CAPACITY 256
 
+#define MIN(A, B) (A > B ? B : A)
+#define MAX(A, B) (A > B ? A : B)
+
 string_chunks_t *split_str(arena_t *arena, const char *input, const char *delim)
 {
     string_chunks_t *chunks = arena_alloc(arena, sizeof(*chunks));
     if (!chunks)
         return NULL;
 
-    arena_da_init(arena, chunks);
+    arena_da_init(arena, chunks, ARENA_DA_CAPACITY);
 
     const char *current_pos = input;
     const char *next_delim = NULL;

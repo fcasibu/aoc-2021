@@ -100,10 +100,10 @@ bingo_t *parse_input(arena_t *arena, const char *source)
         return NULL;
 
     selections_t selections = { 0 };
-    arena_da_init(arena, &selections);
+    arena_da_init(arena, &selections, ARENA_DA_CAPACITY);
 
     bingo_cards_t bingo_cards = { 0 };
-    arena_da_init(arena, &bingo_cards);
+    arena_da_init(arena, &bingo_cards, ARENA_DA_CAPACITY);
 
     string_chunks_t *split_lines = split_str(arena, source, "\n\n");
     if (!split_lines)
@@ -123,7 +123,7 @@ bingo_t *parse_input(arena_t *arena, const char *source)
             return NULL;
 
         bingo_card_t bingo_card = { 0 };
-        arena_da_init(arena, &bingo_card);
+        arena_da_init(arena, &bingo_card, ARENA_DA_CAPACITY);
 
         for (usize j = 0; j < card_str->size; ++j) {
             string_chunks_t *numbers = split_str(arena, card_str->items[j], " ");

@@ -104,7 +104,7 @@ static binary_data_t parse_input(arena_t *arena, const char *source)
 
     string_chunks_t *lines = split_str(arena, source, "\n");
     binary_chunks_t *chunks = arena_alloc(arena, sizeof(*chunks));
-    arena_da_init(arena, chunks);
+    arena_da_init(arena, chunks, ARENA_DA_CAPACITY);
 
     for (usize i = 0; i < lines->size; ++i) {
         const char *binary_str = lines->items[i];
