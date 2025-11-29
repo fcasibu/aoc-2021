@@ -75,6 +75,8 @@ int main(void)
     solve_part1(&ctx);
     solve_part2(&ctx);
 
+    arena_destroy(&arena);
+
     return 0;
 }
 

@@ -11,6 +11,9 @@ typedef struct {
 
 string_chunks_t *split_str(arena_t *a, const char *input, const char *delim);
 i64 parse_int(const char *source, int base);
+char *trim_left(char *str);
+char *trim_right(char *str);
+char *trim(char *str);
 
 #ifdef UTILS_IMPLEMENTATION
 
@@ -86,6 +89,29 @@ i64 parse_int(const char *source, int base)
     }
 
     return value;
+}
+
+char *trim_left(char *str)
+{
+    while (isspace(*str))
+        str++;
+    return str;
+}
+
+char *trim_right(char *str)
+{
+    char *end = str + strlen(str);
+
+    while (end > str && isspace(*(end - 1)))
+        end--;
+
+    *end = '\0';
+    return str;
+}
+
+char *trim(char *str)
+{
+    return trim_left(trim_right(str));
 }
 
 #endif // UTILS_IMPLEMENTATION
